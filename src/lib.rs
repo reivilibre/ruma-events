@@ -263,6 +263,15 @@ impl<T> EventResult<T> {
     }
 }
 
+impl<'de, T> Deserialize<'de> for EventResult<T> {
+    fn deserialize<D>(_deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        unimplemented!()
+    }
+}
+
 /// An error when attempting to create a value from a string via the `FromStr` trait.
 ///
 /// This error type is only used for simple enums with unit variants. Event deserialization through

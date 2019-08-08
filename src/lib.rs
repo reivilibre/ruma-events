@@ -263,6 +263,15 @@ impl<T> EventResult<T> {
     }
 }
 
+impl<T> Serialize for EventResult<T> {
+    fn serialize<S>(&self, _serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        unimplemented!()
+    }
+}
+
 impl<'de, T> Deserialize<'de> for EventResult<T> {
     fn deserialize<D>(_deserializer: D) -> Result<Self, D::Error>
     where

@@ -167,7 +167,7 @@ pub mod typing;
 /// provide a message with details about the deserialization error. If deserialization succeeds but
 /// the event is otherwise invalid, a similar message will be provided, as well as a
 /// `serde_json::Value` containing the raw JSON data as it was deserialized.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct InvalidEvent(InnerInvalidEvent);
 
 impl InvalidEvent {
@@ -215,6 +215,12 @@ enum InnerInvalidEvent {
     },
 }
 
+impl Clone for InnerInvalidEvent {
+    fn clone(&self) -> Self {
+        unimplemented!()
+    }
+}
+
 impl From<serde_json::Error> for InvalidEvent {
     fn from(error: serde_json::Error) -> Self {
         InvalidEvent(InnerInvalidEvent::Deserialization { error })
@@ -242,7 +248,7 @@ impl Error for InvalidInput {}
 /// deserialized value `T`. When deserialization succeeds, but the event is invalid for any reason,
 /// this structure will contain an `InvalidEvent`. See the documentation for `InvalidEvent` for
 /// more details.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum EventResult<T> {
     /// `T` deserialized and validated successfully.
     Ok(T),

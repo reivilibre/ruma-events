@@ -1,7 +1,5 @@
 //! Types for the *m.room.message* event.
 
-use std::{convert::TryFrom, str::FromStr};
-
 use js_int::UInt;
 use ruma_identifiers::{EventId, RoomId, UserId};
 use serde::{
@@ -12,7 +10,7 @@ use serde::{
 use serde_json::{from_value, Value};
 
 use super::{EncryptedFile, ImageInfo, ThumbnailInfo};
-use crate::{Event, EventResult, EventType, InnerInvalidEvent, InvalidEvent, RoomEvent, Void};
+use crate::{Event, EventType, RoomEvent};
 
 pub mod feedback;
 

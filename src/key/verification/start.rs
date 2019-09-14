@@ -1,6 +1,6 @@
 //! Types for the *m.key.verification.start* event.
 
-use std::{convert::TryFrom, str::FromStr};
+use std::convert::TryFrom;
 
 use ruma_identifiers::DeviceId;
 use serde::{de::Error, ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializer};
@@ -10,7 +10,7 @@ use super::{
     HashAlgorithm, KeyAgreementProtocol, MessageAuthenticationCode, ShortAuthenticationString,
     VerificationMethod,
 };
-use crate::{Event, EventResult, EventType, InnerInvalidEvent, InvalidEvent, InvalidInput, Void};
+use crate::{Event, EventType, InvalidInput};
 
 /// Begins an SAS key verification process.
 ///
@@ -53,39 +53,41 @@ impl_event!(
     EventType::KeyVerificationStart
 );
 
-impl StartEventContent {
-    fn from_raw(raw: raw::StartEventContent) -> Result<Self, &'static str> {
+impl TryFrom<raw::StartEventContent> for StartEventContent {
+    type Error = String;
+
+    fn try_from(raw: raw::StartEventContent) -> Result<Self, String> {
         match raw {
             raw::StartEventContent::MSasV1(content) => {
                 if !content
                     .key_agreement_protocols
                     .contains(&KeyAgreementProtocol::Curve25519)
                 {
-                    return Err("`key_agreement_protocols` must contain at least `KeyAgreementProtocol::Curve25519`");
+                    return Err("`key_agreement_protocols` must contain at least `KeyAgreementProtocol::Curve25519`".to_owned());
                 }
 
                 if !content.hashes.contains(&HashAlgorithm::Sha256) {
-                    return Err("`hashes` must contain at least `HashAlgorithm::Sha256`");
+                    return Err("`hashes` must contain at least `HashAlgorithm::Sha256`".to_owned());
                 }
 
                 if !content
                     .message_authentication_codes
                     .contains(&MessageAuthenticationCode::HkdfHmacSha256)
                 {
-                    return Err("`message_authentication_codes` must contain at least `MessageAuthenticationCode::HkdfHmacSha256`");
+                    return Err("`message_authentication_codes` must contain at least `MessageAuthenticationCode::HkdfHmacSha256`".to_owned());
                 }
 
                 if !content
                     .short_authentication_string
                     .contains(&ShortAuthenticationString::Decimal)
                 {
-                    return Err("`short_authentication_string` must contain at least `ShortAuthenticationString::Decimal`");
+                    return Err("`short_authentication_string` must contain at least `ShortAuthenticationString::Decimal`".to_owned());
                 }
 
                 Ok(StartEventContent::MSasV1(content))
             }
             raw::StartEventContent::__Nonexhaustive => {
-                panic!("__Nonexhaustive enum variant is not intended for use.");
+                panic!("__Nonexhaustive enum variant is not intended for use.".to_owned());
             }
         }
     }

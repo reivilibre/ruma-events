@@ -361,7 +361,7 @@ impl ToTokens for RumaEvent {
             impl crate::EventResultCompatible for #name {
                 type NeedsValidation = crate::False;
                 type Raw = crate::Void;
-                type RawContent = crate::Void;
+                //type RawContent = crate::Void;
             }
 
             impl crate::Event for #name {

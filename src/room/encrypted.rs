@@ -1,15 +1,11 @@
 //! Types for the *m.room.encrypted* event.
 
-use std::{convert::TryFrom, str::FromStr};
-
 use js_int::UInt;
 use ruma_identifiers::{DeviceId, EventId, RoomId, UserId};
 use serde::{de::Error, ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{from_value, Value};
 
-use crate::{
-    Algorithm, Event, EventResult, EventType, InnerInvalidEvent, InvalidEvent, RoomEvent, Void,
-};
+use crate::{Algorithm, Event, EventType, RoomEvent};
 
 /// This event type is used when sending encrypted events.
 ///

@@ -29,7 +29,6 @@ macro_rules! impl_event {
         impl crate::EventResultCompatible for $name {
             type NeedsValidation = crate::True;
             type Raw = raw::$name;
-            type RawContent = raw::$content_name;
         }
 
         impl crate::Event for $name {

@@ -1,15 +1,13 @@
 //! Types for the *m.room.power_levels* event.
 
-use std::{collections::HashMap, convert::TryFrom, str::FromStr};
+use std::collections::HashMap;
 
 use js_int::{Int, UInt};
 use ruma_identifiers::{EventId, RoomId, UserId};
-use serde::{ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use serde_json::Value;
 
-use crate::{
-    Event, EventResult, EventType, InnerInvalidEvent, InvalidEvent, RoomEvent, StateEvent, Void,
-};
+use crate::{Event, EventType, RoomEvent, StateEvent};
 
 /// Defines the power levels (privileges) of users in the room.
 #[derive(Clone, Debug, PartialEq)]

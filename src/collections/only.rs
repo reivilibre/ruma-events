@@ -1,10 +1,7 @@
 //! Enums for heterogeneous collections of events, exclusive to event types that implement "at
 //! most" the trait of the same name.
 
-use std::str::FromStr;
-
 use serde::{Serialize, Serializer};
-use serde_json::{from_value, Value};
 
 pub use super::all::StateEvent;
 use crate::{
@@ -33,7 +30,7 @@ use crate::{
     sticker::StickerEvent,
     tag::TagEvent,
     typing::TypingEvent,
-    CustomEvent, CustomRoomEvent, EventType, InnerInvalidEvent, InvalidEvent,
+    CustomEvent, CustomRoomEvent,
 };
 
 /// A basic event.

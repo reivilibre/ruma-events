@@ -1,16 +1,11 @@
 //! Types for the *m.room.name* event.
 
-use std::{convert::TryFrom, str::FromStr};
-
 use js_int::UInt;
 use ruma_identifiers::{EventId, RoomId, UserId};
-use serde::{ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use serde_json::Value;
 
-use crate::{
-    empty_string_as_none, Event, EventResult, EventType, InnerInvalidEvent, InvalidEvent,
-    InvalidInput, RoomEvent, StateEvent, Void,
-};
+use crate::{empty_string_as_none, Event, EventType, InvalidInput, RoomEvent, StateEvent};
 
 /// A human-friendly room name designed to be displayed to the end-user.
 #[derive(Clone, Debug, PartialEq)]

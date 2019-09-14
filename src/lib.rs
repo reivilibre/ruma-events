@@ -115,7 +115,6 @@
 //#![deny(warnings)]
 
 use std::{
-    collections::HashMap,
     convert::TryInto,
     error::Error,
     fmt::{Debug, Display, Error as FmtError, Formatter, Result as FmtResult},
@@ -131,19 +130,19 @@ use serde::{
 };
 use serde_json::Value;
 
-// pub use custom::CustomEvent;
-// pub use custom_room::CustomRoomEvent;
-// pub use custom_state::CustomStateEvent;
+pub use custom::CustomEvent;
+pub use custom_room::CustomRoomEvent;
+pub use custom_state::CustomStateEvent;
 
 #[macro_use]
 mod macros;
 
 pub mod call;
-// /// Enums for heterogeneous collections of events.
-// pub mod collections {
-//     pub mod all;
-//     pub mod only;
-// }
+/// Enums for heterogeneous collections of events.
+pub mod collections {
+    pub mod all;
+    pub mod only;
+}
 pub mod direct;
 pub mod dummy;
 pub mod forwarded_room_key;
@@ -253,11 +252,6 @@ pub trait EventResultCompatible {
     ///
     /// Always `Void` if `NeedsValidation` = `False`.
     type Raw;
-
-    /// The 'raw', non-validated form of this event's content.
-    ///
-    /// Always `Void` if `NeedsValidation` = `False`.
-    type RawContent; // TODO: Required??
 }
 
 /// An empty type. Used for `Raw` and `RawContent` in `Event` when validation cannot fail.
@@ -272,17 +266,15 @@ pub enum True {}
 #[derive(Debug)]
 pub enum False {}
 
-impl EventResultCompatible for Empty {
+/*impl EventResultCompatible for Empty {
     type NeedsValidation = False;
     type Raw = Void;
-    type RawContent = Void;
 }
 
 impl<K, V> EventResultCompatible for HashMap<K, V> {
     type NeedsValidation = False;
     type Raw = Void;
-    type RawContent = Void;
-}
+}*/
 
 /// The result of deserializing an event, which may or may not be valid.
 ///
@@ -622,56 +614,56 @@ pub trait StateEvent: RoomEvent {
     fn state_key(&self) -> &str;
 }
 
-// mod custom {
-//     use ruma_events_macros::ruma_event;
-//     use serde_json::Value;
+mod custom {
+    use ruma_events_macros::ruma_event;
+    use serde_json::Value;
 
-//     ruma_event! {
-//         /// A custom basic event not covered by the Matrix specification.
-//         CustomEvent {
-//             kind: Event,
-//             event_type: Custom,
-//             content_type_alias: {
-//                 /// The payload for `CustomEvent`.
-//                 Value
-//             },
-//         }
-//     }
-// }
+    ruma_event! {
+        /// A custom basic event not covered by the Matrix specification.
+        CustomEvent {
+            kind: Event,
+            event_type: Custom,
+            content_type_alias: {
+                /// The payload for `CustomEvent`.
+                Value
+            },
+        }
+    }
+}
 
-// mod custom_room {
-//     use ruma_events_macros::ruma_event;
-//     use serde_json::Value;
+mod custom_room {
+    use ruma_events_macros::ruma_event;
+    use serde_json::Value;
 
-//     ruma_event! {
-//         /// A custom room event not covered by the Matrix specification.
-//         CustomRoomEvent {
-//             kind: RoomEvent,
-//             event_type: Custom,
-//             content_type_alias: {
-//                 /// The payload for `CustomRoomEvent`.
-//                 Value
-//             },
-//         }
-//     }
-// }
+    ruma_event! {
+        /// A custom room event not covered by the Matrix specification.
+        CustomRoomEvent {
+            kind: RoomEvent,
+            event_type: Custom,
+            content_type_alias: {
+                /// The payload for `CustomRoomEvent`.
+                Value
+            },
+        }
+    }
+}
 
-// mod custom_state {
-//     use ruma_events_macros::ruma_event;
-//     use serde_json::Value;
+mod custom_state {
+    use ruma_events_macros::ruma_event;
+    use serde_json::Value;
 
-//     ruma_event! {
-//         /// A custom state event not covered by the Matrix specification.
-//         CustomStateEvent {
-//             kind: StateEvent,
-//             event_type: Custom,
-//             content_type_alias: {
-//                 /// The payload for `CustomStateEvent`.
-//                 Value
-//             },
-//         }
-//     }
-// }
+    ruma_event! {
+        /// A custom state event not covered by the Matrix specification.
+        CustomStateEvent {
+            kind: StateEvent,
+            event_type: Custom,
+            content_type_alias: {
+                /// The payload for `CustomStateEvent`.
+                Value
+            },
+        }
+    }
+}
 
 impl Display for EventType {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), FmtError> {

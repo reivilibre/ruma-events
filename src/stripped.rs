@@ -5,11 +5,8 @@
 //! state event to be created, when the other fields can be inferred from a larger context, or where
 //! the other fields are otherwise inapplicable.
 
-use std::convert::TryFrom;
-
 use ruma_identifiers::UserId;
-use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
-use serde_json::from_value;
+use serde::{Serialize, Serializer};
 
 use crate::{
     room::{
@@ -20,7 +17,7 @@ use crate::{
         power_levels::PowerLevelsEventContent, third_party_invite::ThirdPartyInviteEventContent,
         topic::TopicEventContent,
     },
-    EventResult, EventType, InnerInvalidEvent, InvalidEvent,
+    EventType,
 };
 
 /// A stripped-down version of a state event that is included along with some other events.

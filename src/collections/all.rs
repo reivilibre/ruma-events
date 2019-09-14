@@ -1,10 +1,7 @@
 //! Enums for heterogeneous collections of events, inclusive for every event type that implements
 //! the trait of the same name.
 
-use std::str::FromStr;
-
 use serde::{Serialize, Serializer};
-use serde_json::{from_value, Value};
 
 use crate::{
     call::{
@@ -48,7 +45,7 @@ use crate::{
     sticker::StickerEvent,
     tag::TagEvent,
     typing::TypingEvent,
-    CustomEvent, CustomRoomEvent, CustomStateEvent, EventType, InnerInvalidEvent, InvalidEvent,
+    CustomEvent, CustomRoomEvent, CustomStateEvent,
 };
 
 /// A basic event, room event, or state event.

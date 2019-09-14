@@ -1,16 +1,11 @@
 //! Types for the *m.room.server_acl* event.
 
-use std::{convert::TryFrom, str::FromStr};
-
 use js_int::UInt;
 use ruma_identifiers::{EventId, RoomId, UserId};
-use serde::{ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use serde_json::Value;
 
-use crate::{
-    default_true, Event, EventResult, EventType, InnerInvalidEvent, InvalidEvent, RoomEvent,
-    StateEvent, Void,
-};
+use crate::{default_true, Event, EventType, RoomEvent, StateEvent};
 
 /// An event to indicate which servers are permitted to participate in the room.
 #[derive(Clone, Debug, PartialEq)]

@@ -1,4 +1,7 @@
-use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
+use std::{
+    fmt::{Debug, Display, Formatter, Result as FmtResult},
+    marker::PhantomData,
+};
 
 use serde::{
     de::{Error as SerdeError, Visitor},
@@ -66,7 +69,7 @@ pub enum EventResult<T: EventResultCompatible> {
     Err(InvalidEvent<T::Raw>),
 }
 
-impl<T> EventResult<T> {
+impl<T: EventResultCompatible> EventResult<T> {
     /// Convert `EventResult<T>` into the equivalent `std::result::Result<T, InvalidEvent<T::Raw>>`.
     pub fn into_result(self) -> Result<T, InvalidEvent<T::Raw>> {
         match self {
@@ -86,16 +89,22 @@ pub trait EventResultCompatible {
     ///
     /// Always `Void` if `NeedsValidation` = `False`.
     type Raw;
-
-    /// The 'raw', non-validated form of this event's content.
-    ///
-    /// Always `Void` if `NeedsValidation` = `False`.
-    type RawContent;
 }
 
+/// An empty type. Used for `Raw` and `RawContent` in `Event` when validation cannot fail.
+#[derive(Debug)]
+pub enum Void {}
+
+/// Type equivalent to `true`
+#[derive(Debug)]
+pub enum True {}
+
+/// Type equivalent to `false`
+#[derive(Debug)]
+pub enum False {}
+
 /// A basic event.
-pub trait Event: Debug + Serialize + EventResultCompatible,
-{
+pub trait Event: Debug + Serialize + EventResultCompatible {
     /// The type of this event's `content` field.
     type Content: Debug + Serialize;
 

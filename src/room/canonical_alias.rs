@@ -1,16 +1,11 @@
 //! Types for the *m.room.canonical_alias* event.
 
-use std::{convert::TryFrom, str::FromStr};
-
 use js_int::UInt;
 use ruma_identifiers::{EventId, RoomAliasId, RoomId, UserId};
-use serde::{ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use serde_json::Value;
 
-use crate::{
-    empty_string_as_none, Event, EventResult, EventType, InnerInvalidEvent, InvalidEvent,
-    RoomEvent, StateEvent,
-};
+use crate::{empty_string_as_none, Event, EventType, RoomEvent, StateEvent};
 
 /// Informs the room as to which alias is the canonical one.
 #[derive(Clone, Debug, PartialEq)]

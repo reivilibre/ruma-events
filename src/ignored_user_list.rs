@@ -1,11 +1,11 @@
 //! Types for the *m.ignored_user_list* event.
 
-use std::{collections::HashMap, convert::TryFrom, str::FromStr};
+use std::collections::HashMap;
 
 use ruma_identifiers::UserId;
-use serde::{ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 
-use crate::{Empty, Event, EventResult, EventType, InnerInvalidEvent, InvalidEvent};
+use crate::{Empty, Event, EventType};
 
 /// A list of users to ignore.
 #[derive(Clone, Debug, PartialEq)]

@@ -9,7 +9,7 @@ use serde_json::Value;
 
 use crate::{
     empty_string_as_none, Event, EventResult, EventType, InnerInvalidEvent, InvalidEvent,
-    InvalidInput, RoomEvent, StateEvent,
+    InvalidInput, RoomEvent, StateEvent, Void,
 };
 
 /// A human-friendly room name designed to be displayed to the end-user.
@@ -46,88 +46,6 @@ pub struct NameEvent {
 pub struct NameEventContent {
     /// The name of the room. This MUST NOT exceed 255 bytes.
     pub(crate) name: Option<String>,
-}
-
-impl<'de> Deserialize<'de> for EventResult<NameEvent> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let json = serde_json::Value::deserialize(deserializer)?;
-
-        let raw: raw::NameEvent = match serde_json::from_value(json.clone()) {
-            Ok(raw) => raw,
-            Err(error) => {
-                return Ok(EventResult::Err(InvalidEvent(
-                    InnerInvalidEvent::Validation {
-                        json,
-                        message: error.to_string(),
-                    },
-                )));
-            }
-        };
-
-        Ok(EventResult::Ok(NameEvent {
-            content: NameEventContent {
-                name: raw.content.name,
-            },
-            event_id: raw.event_id,
-            origin_server_ts: raw.origin_server_ts,
-            prev_content: raw
-                .prev_content
-                .map(|prev| NameEventContent { name: prev.name }),
-            room_id: raw.room_id,
-            sender: raw.sender,
-            state_key: raw.state_key,
-            unsigned: raw.unsigned,
-        }))
-    }
-}
-
-impl FromStr for NameEvent {
-    type Err = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn from_str(json: &str) -> Result<Self, Self::Err> {
-        let raw = match serde_json::from_str::<raw::NameEvent>(json) {
-            Ok(raw) => raw,
-            Err(error) => match serde_json::from_str::<serde_json::Value>(json) {
-                Ok(value) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Validation {
-                        json: value,
-                        message: error.to_string(),
-                    }));
-                }
-                Err(error) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Deserialization { error }));
-                }
-            },
-        };
-
-        Ok(Self {
-            content: NameEventContent {
-                name: raw.content.name,
-            },
-            event_id: raw.event_id,
-            origin_server_ts: raw.origin_server_ts,
-            prev_content: raw
-                .prev_content
-                .map(|prev| NameEventContent { name: prev.name }),
-            room_id: raw.room_id,
-            sender: raw.sender,
-            state_key: raw.state_key,
-            unsigned: raw.unsigned,
-        })
-    }
-}
-
-impl<'a> TryFrom<&'a str> for NameEvent {
-    type Error = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn try_from(json: &'a str) -> Result<Self, Self::Error> {
-        FromStr::from_str(json)
-    }
 }
 
 impl Serialize for NameEvent {
@@ -196,62 +114,6 @@ impl NameEventContent {
     /// The name of the room, if any.
     pub fn name(&self) -> Option<&str> {
         self.name.as_ref().map(String::as_ref)
-    }
-}
-
-impl<'de> Deserialize<'de> for EventResult<NameEventContent> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let json = serde_json::Value::deserialize(deserializer)?;
-
-        let raw: raw::NameEventContent = match serde_json::from_value(json.clone()) {
-            Ok(raw) => raw,
-            Err(error) => {
-                return Ok(EventResult::Err(InvalidEvent(
-                    InnerInvalidEvent::Validation {
-                        json,
-                        message: error.to_string(),
-                    },
-                )));
-            }
-        };
-
-        Ok(EventResult::Ok(NameEventContent { name: raw.name }))
-    }
-}
-
-impl FromStr for NameEventContent {
-    type Err = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn from_str(json: &str) -> Result<Self, Self::Err> {
-        let raw = match serde_json::from_str::<raw::NameEventContent>(json) {
-            Ok(raw) => raw,
-            Err(error) => match serde_json::from_str::<serde_json::Value>(json) {
-                Ok(value) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Validation {
-                        json: value,
-                        message: error.to_string(),
-                    }));
-                }
-                Err(error) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Deserialization { error }));
-                }
-            },
-        };
-
-        Ok(Self { name: raw.name })
-    }
-}
-
-impl<'a> TryFrom<&'a str> for NameEventContent {
-    type Error = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn try_from(json: &'a str) -> Result<Self, Self::Error> {
-        FromStr::from_str(json)
     }
 }
 

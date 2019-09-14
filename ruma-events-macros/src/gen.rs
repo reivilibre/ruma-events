@@ -110,7 +110,7 @@ impl ToTokens for RumaEvent {
             Content::Struct(fields) => {
                 quote! {
                     #[doc = #content_docstring]
-                    #[derive(Clone, Debug, PartialEq, serde::Serialize)]
+                    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
                     pub struct #content_name {
                         #(#fields),*
                     }
@@ -125,19 +125,6 @@ impl ToTokens for RumaEvent {
                     pub type #content_name = #path;
                 }
             }
-        };
-
-        let raw_content = match &self.content {
-            Content::Struct(fields) => {
-                quote! {
-                    #[doc = #content_docstring]
-                    #[derive(Clone, Debug, PartialEq, serde::Deserialize)]
-                    pub struct #content_name {
-                        #(#fields),*
-                    }
-                }
-            }
-            Content::Typedef(_) => TokenStream::new(),
         };
 
         // Custom events will already have an event_type field. All other events need to account
@@ -344,91 +331,18 @@ impl ToTokens for RumaEvent {
             TokenStream::new()
         };
 
-        let impl_conversions_for_content = if let Content::Struct(content_fields) = &self.content {
-            let mut content_field_values: Vec<TokenStream> =
-                Vec::with_capacity(content_fields.len());
-
-            for content_field in content_fields {
-                let content_field_ident = content_field.ident.clone().unwrap();
-                let span = content_field.span();
-
-                let token_stream = quote_spanned! {span=>
-                    #content_field_ident: raw.#content_field_ident,
-                };
-
-                content_field_values.push(token_stream);
-            }
-
-            quote! {
-                impl<'de> serde::Deserialize<'de> for crate::EventResult<#content_name> {
-                    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-                    where
-                        D: serde::Deserializer<'de>,
-                    {
-                        let json = serde_json::Value::deserialize(deserializer)?;
-
-                        let raw: raw::#content_name = match serde_json::from_value(json.clone()) {
-                            Ok(raw) => raw,
-                            Err(error) => {
-                                return Ok(crate::EventResult::Err(crate::InvalidEvent(
-                                    crate::InnerInvalidEvent::Validation {
-                                        json,
-                                        message: error.to_string(),
-                                    },
-                                )));
-                            }
-                        };
-
-                        Ok(crate::EventResult::Ok(#content_name {
-                            #(#content_field_values)*
-                        }))
-                    }
-                }
-
-            }
-        } else {
-            TokenStream::new()
-        };
-
         let output = quote!(
             #(#attrs)*
-            #[derive(Clone, PartialEq, Debug)]
+            #[derive(Clone, PartialEq, Debug, serde::Deserialize)]
             pub struct #name {
                 #(#event_fields),*
             }
 
             #content
 
-            impl<'de> serde::Deserialize<'de> for crate::EventResult<#name> {
-                fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-                where
-                    D: serde::Deserializer<'de>,
-                {
-                    let json = serde_json::Value::deserialize(deserializer)?;
-
-                    let raw: raw::#name = match serde_json::from_value(json.clone()) {
-                        Ok(raw) => raw,
-                        Err(error) => {
-                            return Ok(crate::EventResult::Err(crate::InvalidEvent(
-                                crate::InnerInvalidEvent::Validation {
-                                    json,
-                                    message: error.to_string(),
-                                },
-                            )));
-                        }
-                    };
-
-                    Ok(crate::EventResult::Ok(#name {
-                        #(#try_from_field_values)*
-                    }))
-                }
-            }
-
-            #impl_conversions_for_content
-
             use serde::ser::SerializeStruct as _;
 
-            impl serde::Serialize  for #name {
+            impl serde::Serialize for #name {
                 fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
                 where
                     S: serde::Serializer
@@ -442,6 +356,12 @@ impl ToTokens for RumaEvent {
 
                     state.end()
                 }
+            }
+
+            impl crate::EventResultCompatible for #name {
+                type NeedsValidation = crate::False;
+                type Raw = crate::Void;
+                type RawContent = crate::Void;
             }
 
             impl crate::Event for #name {
@@ -462,19 +382,6 @@ impl ToTokens for RumaEvent {
             #impl_room_event
 
             #impl_state_event
-
-            /// "Raw" versions of the event and its content which implement `serde::Deserialize`.
-            mod raw {
-                use super::*;
-
-                #(#attrs)*
-                #[derive(Clone, Debug, PartialEq, serde::Deserialize)]
-                pub struct #name {
-                    #(#event_fields),*
-                }
-
-                #raw_content
-            }
         );
 
         output.to_tokens(tokens);

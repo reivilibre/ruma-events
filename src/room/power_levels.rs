@@ -8,7 +8,7 @@ use serde::{ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializ
 use serde_json::Value;
 
 use crate::{
-    Event, EventResult, EventType, InnerInvalidEvent, InvalidEvent, RoomEvent, StateEvent,
+    Event, EventResult, EventType, InnerInvalidEvent, InvalidEvent, RoomEvent, StateEvent, Void,
 };
 
 /// Defines the power levels (privileges) of users in the room.
@@ -87,124 +87,6 @@ pub struct PowerLevelsEventContent {
     pub notifications: NotificationPowerLevels,
 }
 
-impl<'de> Deserialize<'de> for EventResult<PowerLevelsEvent> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let json = serde_json::Value::deserialize(deserializer)?;
-
-        let raw: raw::PowerLevelsEvent = match serde_json::from_value(json.clone()) {
-            Ok(raw) => raw,
-            Err(error) => {
-                return Ok(EventResult::Err(InvalidEvent(
-                    InnerInvalidEvent::Validation {
-                        json,
-                        message: error.to_string(),
-                    },
-                )));
-            }
-        };
-
-        Ok(EventResult::Ok(PowerLevelsEvent {
-            content: PowerLevelsEventContent {
-                ban: raw.content.ban,
-                events: raw.content.events,
-                events_default: raw.content.events_default,
-                invite: raw.content.invite,
-                kick: raw.content.kick,
-                redact: raw.content.redact,
-                state_default: raw.content.state_default,
-                users: raw.content.users,
-                users_default: raw.content.users_default,
-                notifications: raw.content.notifications,
-            },
-            event_id: raw.event_id,
-            origin_server_ts: raw.origin_server_ts,
-            prev_content: raw.prev_content.map(|prev| PowerLevelsEventContent {
-                ban: prev.ban,
-                events: prev.events,
-                events_default: prev.events_default,
-                invite: prev.invite,
-                kick: prev.kick,
-                redact: prev.redact,
-                state_default: prev.state_default,
-                users: prev.users,
-                users_default: prev.users_default,
-                notifications: prev.notifications,
-            }),
-            room_id: raw.room_id,
-            sender: raw.sender,
-            state_key: raw.state_key,
-            unsigned: raw.unsigned,
-        }))
-    }
-}
-
-impl FromStr for PowerLevelsEvent {
-    type Err = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn from_str(json: &str) -> Result<Self, Self::Err> {
-        let raw = match serde_json::from_str::<raw::PowerLevelsEvent>(json) {
-            Ok(raw) => raw,
-            Err(error) => match serde_json::from_str::<serde_json::Value>(json) {
-                Ok(value) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Validation {
-                        json: value,
-                        message: error.to_string(),
-                    }));
-                }
-                Err(error) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Deserialization { error }));
-                }
-            },
-        };
-
-        Ok(Self {
-            content: PowerLevelsEventContent {
-                ban: raw.content.ban,
-                events: raw.content.events,
-                events_default: raw.content.events_default,
-                invite: raw.content.invite,
-                kick: raw.content.kick,
-                redact: raw.content.redact,
-                state_default: raw.content.state_default,
-                users: raw.content.users,
-                users_default: raw.content.users_default,
-                notifications: raw.content.notifications,
-            },
-            event_id: raw.event_id,
-            origin_server_ts: raw.origin_server_ts,
-            prev_content: raw.prev_content.map(|prev| PowerLevelsEventContent {
-                ban: prev.ban,
-                events: prev.events,
-                events_default: prev.events_default,
-                invite: prev.invite,
-                kick: prev.kick,
-                redact: prev.redact,
-                state_default: prev.state_default,
-                users: prev.users,
-                users_default: prev.users_default,
-                notifications: prev.notifications,
-            }),
-            room_id: raw.room_id,
-            sender: raw.sender,
-            state_key: raw.state_key,
-            unsigned: raw.unsigned,
-        })
-    }
-}
-
-impl<'a> TryFrom<&'a str> for PowerLevelsEvent {
-    type Error = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn try_from(json: &'a str) -> Result<Self, Self::Error> {
-        FromStr::from_str(json)
-    }
-}
-
 impl Serialize for PowerLevelsEvent {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -255,84 +137,6 @@ impl_state_event!(
     PowerLevelsEventContent,
     EventType::RoomPowerLevels
 );
-
-impl<'de> Deserialize<'de> for EventResult<PowerLevelsEventContent> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let json = serde_json::Value::deserialize(deserializer)?;
-
-        let raw: raw::PowerLevelsEventContent = match serde_json::from_value(json.clone()) {
-            Ok(raw) => raw,
-            Err(error) => {
-                return Ok(EventResult::Err(InvalidEvent(
-                    InnerInvalidEvent::Validation {
-                        json,
-                        message: error.to_string(),
-                    },
-                )));
-            }
-        };
-
-        Ok(EventResult::Ok(PowerLevelsEventContent {
-            ban: raw.ban,
-            events: raw.events,
-            events_default: raw.events_default,
-            invite: raw.invite,
-            kick: raw.kick,
-            redact: raw.redact,
-            state_default: raw.state_default,
-            users: raw.users,
-            users_default: raw.users_default,
-            notifications: raw.notifications,
-        }))
-    }
-}
-
-impl FromStr for PowerLevelsEventContent {
-    type Err = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn from_str(json: &str) -> Result<Self, Self::Err> {
-        let raw = match serde_json::from_str::<raw::PowerLevelsEventContent>(json) {
-            Ok(raw) => raw,
-            Err(error) => match serde_json::from_str::<serde_json::Value>(json) {
-                Ok(value) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Validation {
-                        json: value,
-                        message: error.to_string(),
-                    }));
-                }
-                Err(error) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Deserialization { error }));
-                }
-            },
-        };
-
-        Ok(Self {
-            ban: raw.ban,
-            events: raw.events,
-            events_default: raw.events_default,
-            invite: raw.invite,
-            kick: raw.kick,
-            redact: raw.redact,
-            state_default: raw.state_default,
-            users: raw.users,
-            users_default: raw.users_default,
-            notifications: raw.notifications,
-        })
-    }
-}
-
-impl<'a> TryFrom<&'a str> for PowerLevelsEventContent {
-    type Error = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn try_from(json: &'a str) -> Result<Self, Self::Error> {
-        FromStr::from_str(json)
-    }
-}
 
 mod raw {
     use super::*;

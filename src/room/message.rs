@@ -12,7 +12,7 @@ use serde::{
 use serde_json::{from_value, Value};
 
 use super::{EncryptedFile, ImageInfo, ThumbnailInfo};
-use crate::{Event, EventResult, EventType, InnerInvalidEvent, InvalidEvent, RoomEvent};
+use crate::{Event, EventResult, EventType, InnerInvalidEvent, InvalidEvent, RoomEvent, Void};
 
 pub mod feedback;
 
@@ -76,110 +76,6 @@ pub enum MessageEventContent {
     __Nonexhaustive,
 }
 
-impl<'de> Deserialize<'de> for EventResult<MessageEvent> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let json = serde_json::Value::deserialize(deserializer)?;
-
-        let raw: raw::MessageEvent = match serde_json::from_value(json.clone()) {
-            Ok(raw) => raw,
-            Err(error) => {
-                return Ok(EventResult::Err(InvalidEvent(
-                    InnerInvalidEvent::Validation {
-                        json,
-                        message: error.to_string(),
-                    },
-                )));
-            }
-        };
-
-        Ok(EventResult::Ok(MessageEvent {
-            content: match raw.content {
-                raw::MessageEventContent::Audio(content) => MessageEventContent::Audio(content),
-                raw::MessageEventContent::Emote(content) => MessageEventContent::Emote(content),
-                raw::MessageEventContent::File(content) => MessageEventContent::File(content),
-                raw::MessageEventContent::Image(content) => MessageEventContent::Image(content),
-                raw::MessageEventContent::Location(content) => {
-                    MessageEventContent::Location(content)
-                }
-                raw::MessageEventContent::Notice(content) => MessageEventContent::Notice(content),
-                raw::MessageEventContent::ServerNotice(content) => {
-                    MessageEventContent::ServerNotice(content)
-                }
-                raw::MessageEventContent::Text(content) => MessageEventContent::Text(content),
-                raw::MessageEventContent::Video(content) => MessageEventContent::Video(content),
-                raw::MessageEventContent::__Nonexhaustive => {
-                    panic!("__Nonexhaustive enum variant is not intended for use.")
-                }
-            },
-            event_id: raw.event_id,
-            origin_server_ts: raw.origin_server_ts,
-            room_id: raw.room_id,
-            sender: raw.sender,
-            unsigned: raw.unsigned,
-        }))
-    }
-}
-
-impl FromStr for MessageEvent {
-    type Err = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn from_str(json: &str) -> Result<Self, Self::Err> {
-        let raw = match serde_json::from_str::<raw::MessageEvent>(json) {
-            Ok(raw) => raw,
-            Err(error) => match serde_json::from_str::<serde_json::Value>(json) {
-                Ok(value) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Validation {
-                        json: value,
-                        message: error.to_string(),
-                    }));
-                }
-                Err(error) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Deserialization { error }));
-                }
-            },
-        };
-
-        Ok(Self {
-            content: match raw.content {
-                raw::MessageEventContent::Audio(content) => MessageEventContent::Audio(content),
-                raw::MessageEventContent::Emote(content) => MessageEventContent::Emote(content),
-                raw::MessageEventContent::File(content) => MessageEventContent::File(content),
-                raw::MessageEventContent::Image(content) => MessageEventContent::Image(content),
-                raw::MessageEventContent::Location(content) => {
-                    MessageEventContent::Location(content)
-                }
-                raw::MessageEventContent::Notice(content) => MessageEventContent::Notice(content),
-                raw::MessageEventContent::ServerNotice(content) => {
-                    MessageEventContent::ServerNotice(content)
-                }
-                raw::MessageEventContent::Text(content) => MessageEventContent::Text(content),
-                raw::MessageEventContent::Video(content) => MessageEventContent::Video(content),
-                raw::MessageEventContent::__Nonexhaustive => {
-                    panic!("__Nonexhaustive enum variant is not intended for use.")
-                }
-            },
-            event_id: raw.event_id,
-            origin_server_ts: raw.origin_server_ts,
-            room_id: raw.room_id,
-            sender: raw.sender,
-            unsigned: raw.unsigned,
-        })
-    }
-}
-
-impl<'a> TryFrom<&'a str> for MessageEvent {
-    type Error = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn try_from(json: &'a str) -> Result<Self, Self::Error> {
-        FromStr::from_str(json)
-    }
-}
-
 impl Serialize for MessageEvent {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -237,96 +133,6 @@ impl Serialize for MessageEventContent {
                 "Attempted to deserialize __Nonexhaustive variant.",
             )),
         }
-    }
-}
-
-impl<'de> Deserialize<'de> for EventResult<MessageEventContent> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let json = serde_json::Value::deserialize(deserializer)?;
-
-        let raw: raw::MessageEventContent = match serde_json::from_value(json.clone()) {
-            Ok(raw) => raw,
-            Err(error) => {
-                return Ok(EventResult::Err(InvalidEvent(
-                    InnerInvalidEvent::Validation {
-                        json,
-                        message: error.to_string(),
-                    },
-                )));
-            }
-        };
-
-        let content = match raw {
-            raw::MessageEventContent::Audio(content) => MessageEventContent::Audio(content),
-            raw::MessageEventContent::Emote(content) => MessageEventContent::Emote(content),
-            raw::MessageEventContent::File(content) => MessageEventContent::File(content),
-            raw::MessageEventContent::Image(content) => MessageEventContent::Image(content),
-            raw::MessageEventContent::Location(content) => MessageEventContent::Location(content),
-            raw::MessageEventContent::Notice(content) => MessageEventContent::Notice(content),
-            raw::MessageEventContent::ServerNotice(content) => {
-                MessageEventContent::ServerNotice(content)
-            }
-            raw::MessageEventContent::Text(content) => MessageEventContent::Text(content),
-            raw::MessageEventContent::Video(content) => MessageEventContent::Video(content),
-            raw::MessageEventContent::__Nonexhaustive => {
-                panic!("__Nonexhaustive enum variant is not intended for use.")
-            }
-        };
-
-        Ok(EventResult::Ok(content))
-    }
-}
-
-impl FromStr for MessageEventContent {
-    type Err = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn from_str(json: &str) -> Result<Self, Self::Err> {
-        let raw = match serde_json::from_str::<raw::MessageEventContent>(json) {
-            Ok(raw) => raw,
-            Err(error) => match serde_json::from_str::<serde_json::Value>(json) {
-                Ok(value) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Validation {
-                        json: value,
-                        message: error.to_string(),
-                    }));
-                }
-                Err(error) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Deserialization { error }));
-                }
-            },
-        };
-
-        match raw {
-            raw::MessageEventContent::Audio(content) => Ok(MessageEventContent::Audio(content)),
-            raw::MessageEventContent::Emote(content) => Ok(MessageEventContent::Emote(content)),
-            raw::MessageEventContent::File(content) => Ok(MessageEventContent::File(content)),
-            raw::MessageEventContent::Image(content) => Ok(MessageEventContent::Image(content)),
-            raw::MessageEventContent::Location(content) => {
-                Ok(MessageEventContent::Location(content))
-            }
-            raw::MessageEventContent::Notice(content) => Ok(MessageEventContent::Notice(content)),
-            raw::MessageEventContent::ServerNotice(content) => {
-                Ok(MessageEventContent::ServerNotice(content))
-            }
-            raw::MessageEventContent::Text(content) => Ok(MessageEventContent::Text(content)),
-            raw::MessageEventContent::Video(content) => Ok(MessageEventContent::Video(content)),
-            raw::MessageEventContent::__Nonexhaustive => {
-                panic!("__Nonexhaustive enum variant is not intended for use.")
-            }
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a str> for MessageEventContent {
-    type Error = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn try_from(json: &'a str) -> Result<Self, Self::Error> {
-        FromStr::from_str(json)
     }
 }
 

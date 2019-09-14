@@ -7,7 +7,9 @@ use ruma_identifiers::{DeviceId, EventId, RoomId, UserId};
 use serde::{de::Error, ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{from_value, Value};
 
-use crate::{Algorithm, Event, EventResult, EventType, InnerInvalidEvent, InvalidEvent, RoomEvent};
+use crate::{
+    Algorithm, Event, EventResult, EventType, InnerInvalidEvent, InvalidEvent, RoomEvent, Void,
+};
 
 /// This event type is used when sending encrypted events.
 ///
@@ -48,100 +50,6 @@ pub enum EncryptedEventContent {
     /// to ruma-events.
     #[doc(hidden)]
     __Nonexhaustive,
-}
-
-impl<'de> Deserialize<'de> for EventResult<EncryptedEvent> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let json = serde_json::Value::deserialize(deserializer)?;
-
-        let raw: raw::EncryptedEvent = match serde_json::from_value(json.clone()) {
-            Ok(raw) => raw,
-            Err(error) => {
-                return Ok(EventResult::Err(InvalidEvent(
-                    InnerInvalidEvent::Validation {
-                        json,
-                        message: error.to_string(),
-                    },
-                )));
-            }
-        };
-
-        let content = match raw.content {
-            raw::EncryptedEventContent::OlmV1Curve25519AesSha2(content) => {
-                EncryptedEventContent::OlmV1Curve25519AesSha2(content)
-            }
-            raw::EncryptedEventContent::MegolmV1AesSha2(content) => {
-                EncryptedEventContent::MegolmV1AesSha2(content)
-            }
-            raw::EncryptedEventContent::__Nonexhaustive => {
-                panic!("__Nonexhaustive enum variant is not intended for use.");
-            }
-        };
-
-        Ok(EventResult::Ok(EncryptedEvent {
-            content,
-            event_id: raw.event_id,
-            origin_server_ts: raw.origin_server_ts,
-            room_id: raw.room_id,
-            sender: raw.sender,
-            unsigned: raw.unsigned,
-        }))
-    }
-}
-
-impl FromStr for EncryptedEvent {
-    type Err = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn from_str(json: &str) -> Result<Self, Self::Err> {
-        let raw = match serde_json::from_str::<raw::EncryptedEvent>(json) {
-            Ok(raw) => raw,
-            Err(error) => match serde_json::from_str::<serde_json::Value>(json) {
-                Ok(value) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Validation {
-                        json: value,
-                        message: error.to_string(),
-                    }));
-                }
-                Err(error) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Deserialization { error }));
-                }
-            },
-        };
-
-        let content = match raw.content {
-            raw::EncryptedEventContent::OlmV1Curve25519AesSha2(content) => {
-                EncryptedEventContent::OlmV1Curve25519AesSha2(content)
-            }
-            raw::EncryptedEventContent::MegolmV1AesSha2(content) => {
-                EncryptedEventContent::MegolmV1AesSha2(content)
-            }
-            raw::EncryptedEventContent::__Nonexhaustive => {
-                panic!("__Nonexhaustive enum variant is not intended for use.");
-            }
-        };
-
-        Ok(Self {
-            content,
-            event_id: raw.event_id,
-            origin_server_ts: raw.origin_server_ts,
-            room_id: raw.room_id,
-            sender: raw.sender,
-            unsigned: raw.unsigned,
-        })
-    }
-}
-
-impl<'a> TryFrom<&'a str> for EncryptedEvent {
-    type Error = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn try_from(json: &'a str) -> Result<Self, Self::Error> {
-        FromStr::from_str(json)
-    }
 }
 
 impl Serialize for EncryptedEvent {
@@ -185,82 +93,6 @@ impl_room_event!(
     EncryptedEventContent,
     EventType::RoomEncrypted
 );
-
-impl<'de> Deserialize<'de> for EventResult<EncryptedEventContent> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let json = serde_json::Value::deserialize(deserializer)?;
-
-        let raw: raw::EncryptedEventContent = match serde_json::from_value(json.clone()) {
-            Ok(raw) => raw,
-            Err(error) => {
-                return Ok(EventResult::Err(InvalidEvent(
-                    InnerInvalidEvent::Validation {
-                        json,
-                        message: error.to_string(),
-                    },
-                )));
-            }
-        };
-
-        match raw {
-            raw::EncryptedEventContent::OlmV1Curve25519AesSha2(content) => Ok(EventResult::Ok(
-                EncryptedEventContent::OlmV1Curve25519AesSha2(content),
-            )),
-            raw::EncryptedEventContent::MegolmV1AesSha2(content) => Ok(EventResult::Ok(
-                EncryptedEventContent::MegolmV1AesSha2(content),
-            )),
-            raw::EncryptedEventContent::__Nonexhaustive => {
-                panic!("__Nonexhaustive enum variant is not intended for use.");
-            }
-        }
-    }
-}
-
-impl FromStr for EncryptedEventContent {
-    type Err = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn from_str(json: &str) -> Result<Self, Self::Err> {
-        let raw = match serde_json::from_str::<raw::EncryptedEventContent>(json) {
-            Ok(raw) => raw,
-            Err(error) => match serde_json::from_str::<serde_json::Value>(json) {
-                Ok(value) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Validation {
-                        json: value,
-                        message: error.to_string(),
-                    }));
-                }
-                Err(error) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Deserialization { error }));
-                }
-            },
-        };
-
-        match raw {
-            raw::EncryptedEventContent::OlmV1Curve25519AesSha2(content) => {
-                Ok(EncryptedEventContent::OlmV1Curve25519AesSha2(content))
-            }
-            raw::EncryptedEventContent::MegolmV1AesSha2(content) => {
-                Ok(EncryptedEventContent::MegolmV1AesSha2(content))
-            }
-            raw::EncryptedEventContent::__Nonexhaustive => {
-                panic!("__Nonexhaustive enum variant is not intended for use.");
-            }
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a str> for EncryptedEventContent {
-    type Error = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn try_from(json: &'a str) -> Result<Self, Self::Error> {
-        FromStr::from_str(json)
-    }
-}
 
 impl Serialize for EncryptedEventContent {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

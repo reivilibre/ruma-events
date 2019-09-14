@@ -21,70 +21,6 @@ pub struct IgnoredUserListEventContent {
     pub ignored_users: Vec<UserId>,
 }
 
-impl<'de> Deserialize<'de> for EventResult<IgnoredUserListEvent> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let json = serde_json::Value::deserialize(deserializer)?;
-
-        let raw: raw::IgnoredUserListEvent = match serde_json::from_value(json.clone()) {
-            Ok(raw) => raw,
-            Err(error) => {
-                return Ok(EventResult::Err(InvalidEvent(
-                    InnerInvalidEvent::Validation {
-                        json,
-                        message: error.to_string(),
-                    },
-                )));
-            }
-        };
-
-        Ok(EventResult::Ok(IgnoredUserListEvent {
-            content: IgnoredUserListEventContent {
-                ignored_users: raw.content.ignored_users.keys().cloned().collect(),
-            },
-        }))
-    }
-}
-
-impl FromStr for IgnoredUserListEvent {
-    type Err = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn from_str(json: &str) -> Result<Self, InvalidEvent> {
-        let raw = match serde_json::from_str::<raw::IgnoredUserListEvent>(json) {
-            Ok(raw) => raw,
-            Err(error) => match serde_json::from_str::<serde_json::Value>(json) {
-                Ok(value) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Validation {
-                        json: value,
-                        message: error.to_string(),
-                    }));
-                }
-                Err(error) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Deserialization { error }));
-                }
-            },
-        };
-
-        Ok(Self {
-            content: IgnoredUserListEventContent {
-                ignored_users: raw.content.ignored_users.keys().cloned().collect(),
-            },
-        })
-    }
-}
-
-impl<'a> TryFrom<&'a str> for IgnoredUserListEvent {
-    type Error = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn try_from(json: &'a str) -> Result<Self, Self::Error> {
-        FromStr::from_str(json)
-    }
-}
-
 impl Serialize for IgnoredUserListEvent {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -104,66 +40,6 @@ impl_event!(
     IgnoredUserListEventContent,
     EventType::IgnoredUserList
 );
-
-impl<'de> Deserialize<'de> for EventResult<IgnoredUserListEventContent> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let json = serde_json::Value::deserialize(deserializer)?;
-
-        let raw: raw::IgnoredUserListEventContent = match serde_json::from_value(json.clone()) {
-            Ok(raw) => raw,
-            Err(error) => {
-                return Ok(EventResult::Err(InvalidEvent(
-                    InnerInvalidEvent::Validation {
-                        json,
-                        message: error.to_string(),
-                    },
-                )));
-            }
-        };
-
-        Ok(EventResult::Ok(IgnoredUserListEventContent {
-            ignored_users: raw.ignored_users.keys().cloned().collect(),
-        }))
-    }
-}
-
-impl FromStr for IgnoredUserListEventContent {
-    type Err = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn from_str(json: &str) -> Result<Self, Self::Err> {
-        let raw = match serde_json::from_str::<raw::IgnoredUserListEventContent>(json) {
-            Ok(raw) => raw,
-            Err(error) => match serde_json::from_str::<serde_json::Value>(json) {
-                Ok(value) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Validation {
-                        json: value,
-                        message: error.to_string(),
-                    }));
-                }
-                Err(error) => {
-                    return Err(InvalidEvent(InnerInvalidEvent::Deserialization { error }));
-                }
-            },
-        };
-
-        Ok(Self {
-            ignored_users: raw.ignored_users.keys().cloned().collect(),
-        })
-    }
-}
-
-impl<'a> TryFrom<&'a str> for IgnoredUserListEventContent {
-    type Error = InvalidEvent;
-
-    /// Attempt to create `Self` from parsing a string of JSON data.
-    fn try_from(json: &'a str) -> Result<Self, Self::Error> {
-        FromStr::from_str(json)
-    }
-}
 
 impl Serialize for IgnoredUserListEventContent {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

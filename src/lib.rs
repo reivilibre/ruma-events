@@ -111,11 +111,12 @@
 //! because *m.room.message* implements a *more specific* event trait than `Event`.
 
 #![deny(missing_debug_implementations)]
-#![deny(missing_docs)]
-#![deny(warnings)]
+//#![deny(missing_docs)]
+//#![deny(warnings)]
 
 use std::{
     collections::HashMap,
+    convert::TryInto,
     error::Error,
     fmt::{Debug, Display, Error as FmtError, Formatter, Result as FmtResult},
     hash::Hash,
@@ -124,7 +125,7 @@ use std::{
 use js_int::UInt;
 use ruma_identifiers::{EventId, RoomId, UserId};
 use serde::{
-    de::{Error as SerdeError, IntoDeserializer, MapAccess, Visitor},
+    de::{DeserializeOwned, Error as SerdeError, IntoDeserializer, MapAccess, Visitor},
     ser::SerializeMap,
     Deserialize, Deserializer, Serialize, Serializer,
 };
@@ -169,57 +170,62 @@ pub mod typing;
 /// the event is otherwise invalid, a similar message will be provided, as well as a
 /// `serde_json::Value` containing the raw JSON data as it was deserialized.
 #[derive(Debug)]
-pub struct InvalidEvent(InnerInvalidEvent);
+pub struct InvalidEvent<T>(InnerInvalidEvent<T>);
 
-impl InvalidEvent {
+impl<T> InvalidEvent<T> {
     /// A message describing why the event is invalid.
     pub fn message(&self) -> String {
         match self.0 {
-            InnerInvalidEvent::Deserialization { ref error } => error.to_string(),
+            InnerInvalidEvent::Deserialization { ref error, .. } => error.to_string(),
             InnerInvalidEvent::Validation { ref message, .. } => message.to_string(),
         }
     }
 
-    /// The raw `serde_json::Value` representation of the invalid event, if available.
+    /// The raw event data, if deserialization succeeded but validation failed.
+    pub fn raw_data(&self) -> Option<&T> {
+        match self.0 {
+            InnerInvalidEvent::Validation { ref raw_data, .. } => Some(raw_data),
+            _ => None,
+        }
+    }
+
+    /// The `serde_json::Value` representation of the invalid event, if deserialization failed.
     pub fn json(&self) -> Option<&Value> {
         match self.0 {
-            InnerInvalidEvent::Validation { ref json, .. } => Some(json),
+            InnerInvalidEvent::Deserialization { ref json, .. } => Some(json),
             _ => None,
         }
     }
 }
 
-impl Display for InvalidEvent {
+impl<T> Display for InvalidEvent<T> {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(f, "{}", self.message())
     }
 }
 
-impl Error for InvalidEvent {}
+impl<T: Debug> Error for InvalidEvent<T> {}
 
 /// An event that is malformed or otherwise invalid.
 #[derive(Debug)]
-enum InnerInvalidEvent {
+enum InnerInvalidEvent<T> {
     /// An event that failed to deserialize from JSON.
     Deserialization {
+        /// The raw `serde_json::Value` representation of the invalid event.
+        json: Value,
+
         /// The deserialization error returned by serde.
         error: serde_json::Error,
     },
 
     /// An event that deserialized but failed validation.
     Validation {
-        /// The raw `serde_json::Value` representation of the invalid event.
-        json: Value,
+        /// The event data that failed validation.
+        raw_data: T,
 
         /// An message describing why the event was invalid.
         message: String,
     },
-}
-
-impl From<serde_json::Error> for InvalidEvent {
-    fn from(error: serde_json::Error) -> Self {
-        InvalidEvent(InnerInvalidEvent::Deserialization { error })
-    }
 }
 
 /// An error returned when attempting to create an event with data that would make it invalid.
@@ -237,6 +243,47 @@ impl Display for InvalidInput {
 
 impl Error for InvalidInput {}
 
+pub trait EventResultCompatible {
+    /// Whether this type needs to be validated after deserialization. (type-level boolean)
+    ///
+    /// Only true for actual event types
+    type NeedsValidation;
+
+    /// The 'raw', non-validated form of this event.
+    ///
+    /// Always `Void` if `NeedsValidation` = `False`.
+    type Raw;
+
+    /// The 'raw', non-validated form of this event's content.
+    ///
+    /// Always `Void` if `NeedsValidation` = `False`.
+    type RawContent; // TODO: Required??
+}
+
+/// An empty type. Used for `Raw` and `RawContent` in `Event` when validation cannot fail.
+#[derive(Debug)]
+pub enum Void {}
+
+/// Type equivalent to `true`
+#[derive(Debug)]
+pub enum True {}
+
+/// Type equivalent to `false`
+#[derive(Debug)]
+pub enum False {}
+
+impl EventResultCompatible for Empty {
+    type NeedsValidation = False;
+    type Raw = Void;
+    type RawContent = Void;
+}
+
+impl<K, V> EventResultCompatible for HashMap<K, V> {
+    type NeedsValidation = False;
+    type Raw = Void;
+    type RawContent = Void;
+}
+
 /// The result of deserializing an event, which may or may not be valid.
 ///
 /// When data is successfully deserialized and validated, this structure will contain the
@@ -244,60 +291,93 @@ impl Error for InvalidInput {}
 /// this structure will contain an `InvalidEvent`. See the documentation for `InvalidEvent` for
 /// more details.
 #[derive(Debug)]
-pub enum EventResult<T> {
+pub enum EventResult<T: EventResultCompatible> {
     /// `T` deserialized and validated successfully.
     Ok(T),
 
-    /// `T` deserialized but was invalid.
+    /// `T` failed either deserialization or validation.
     ///
-    /// `InvalidEvent` contains the original input.
-    Err(InvalidEvent),
+    /// `InvalidEvent` contains the error message and the raw data.
+    Err(InvalidEvent<T::Raw>),
 }
 
-impl<T> EventResult<T> {
+impl<T: EventResultCompatible> EventResult<T> {
     /// Convert `EventResult<T>` into the equivalent `std::result::Result<T, InvalidEvent>`.
-    pub fn into_result(self) -> Result<T, InvalidEvent> {
+    pub fn into_result(self) -> Result<T, InvalidEvent<T::Raw>> {
         match self {
             EventResult::Ok(t) => Ok(t),
             EventResult::Err(invalid_event) => Err(invalid_event),
         }
     }
-
-    /// Helper for creating a validation error with an error message and the JSON that failed
-    /// validation.
-    #[inline]
-    pub(crate) fn validation_error(message: String, json: serde_json::Value) -> Self {
-        EventResult::Err(InvalidEvent(InnerInvalidEvent::Validation {
-            json,
-            message,
-        }))
-    }
 }
 
-impl<'de, K, V> Deserialize<'de> for EventResult<HashMap<K, V>>
+/// Workaround for `T: EventResultDeserialize<NeedsValidation = True>` and
+/// `T: EventResultDeserialize<NeedsValidation = False>` being considered
+/// potentially overlapping type ranges, even though they're clearly not.
+pub trait EventResultDeserialize: Sized {
+    type Inner: EventResultCompatible;
+
+    fn inner_deserialize(json: serde_json::Value) -> EventResult<Self::Inner>;
+}
+
+impl<'de, T> Deserialize<'de> for EventResult<T>
 where
-    K: for<'inner> Deserialize<'inner> + Eq + Hash,
-    V: for<'inner> Deserialize<'inner>,
+    T: EventResultCompatible,
+    (Self, T::NeedsValidation): EventResultDeserialize<Inner = T>,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
         let json = serde_json::Value::deserialize(deserializer)?;
+        Ok(<(Self, T::NeedsValidation)>::inner_deserialize(json))
+    }
+}
 
-        let hash_map: HashMap<K, V> = match serde_json::from_value(json.clone()) {
-            Ok(hash_map) => hash_map,
+impl<T> EventResultDeserialize for (EventResult<T>, True)
+where
+    T: Event<NeedsValidation = True>,
+    T::Raw: DeserializeOwned + TryInto<T, Error = (T::Raw, String)>,
+{
+    type Inner = T;
+
+    fn inner_deserialize(json: serde_json::Value) -> EventResult<T> {
+        let raw_data: T::Raw = match serde_json::from_value(json.clone()) {
+            Ok(raw) => raw,
             Err(error) => {
-                return Ok(EventResult::Err(InvalidEvent(
-                    InnerInvalidEvent::Validation {
-                        json,
-                        message: error.to_string(),
-                    },
-                )));
+                return EventResult::Err(InvalidEvent(InnerInvalidEvent::Deserialization {
+                    json,
+                    error,
+                }));
             }
         };
 
-        Ok(EventResult::Ok(hash_map))
+        match raw_data.try_into() {
+            Ok(value) => EventResult::Ok(value),
+            Err((raw_data, message)) => {
+                EventResult::Err(InvalidEvent(InnerInvalidEvent::Validation {
+                    message,
+                    raw_data,
+                }))
+            }
+        }
+    }
+}
+
+impl<T> EventResultDeserialize for (EventResult<T>, False)
+where
+    T: EventResultCompatible<NeedsValidation = False> + DeserializeOwned,
+{
+    type Inner = T;
+
+    fn inner_deserialize(json: serde_json::Value) -> EventResult<T> {
+        match serde_json::from_value(json.clone()) {
+            Ok(value) => EventResult::Ok(value),
+            Err(error) => EventResult::Err(InvalidEvent(InnerInvalidEvent::Deserialization {
+                json,
+                error,
+            })),
+        }
     }
 }
 
@@ -355,29 +435,6 @@ impl<'de> Deserialize<'de> for Empty {
         }
 
         deserializer.deserialize_map(EmptyMapVisitor)
-    }
-}
-
-impl<'de> Deserialize<'de> for EventResult<Empty> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let json = serde_json::Value::deserialize(deserializer)?;
-
-        let empty: Empty = match serde_json::from_value(json.clone()) {
-            Ok(empty) => empty,
-            Err(error) => {
-                return Ok(EventResult::Err(InvalidEvent(
-                    InnerInvalidEvent::Validation {
-                        json,
-                        message: error.to_string(),
-                    },
-                )));
-            }
-        };
-
-        Ok(EventResult::Ok(empty))
     }
 }
 
@@ -523,12 +580,7 @@ pub enum EventType {
 }
 
 /// A basic event.
-pub trait Event
-where
-    Self: Debug + Serialize + Sized,
-    for<'de> EventResult<Self>: Deserialize<'de>,
-    for<'de> EventResult<Self::Content>: Deserialize<'de>,
-{
+pub trait Event: Debug + Serialize + Sized + EventResultCompatible {
     /// The type of this event's `content` field.
     type Content: Debug + Serialize;
 
@@ -540,11 +592,7 @@ where
 }
 
 /// An event within the context of a room.
-pub trait RoomEvent: Event
-where
-    for<'de> EventResult<Self>: Deserialize<'de>,
-    for<'de> EventResult<<Self as Event>::Content>: Deserialize<'de>,
-{
+pub trait RoomEvent: Event {
     /// The unique identifier for the event.
     fn event_id(&self) -> &EventId;
 
@@ -566,11 +614,7 @@ where
 }
 
 /// An event that describes persistent state about a room.
-pub trait StateEvent: RoomEvent
-where
-    for<'de> EventResult<Self>: Deserialize<'de>,
-    for<'de> EventResult<<Self as Event>::Content>: Deserialize<'de>,
-{
+pub trait StateEvent: RoomEvent {
     /// The previous content for this state key, if any.
     fn prev_content(&self) -> Option<&Self::Content>;
 

@@ -50,6 +50,8 @@ use crate::{
     typing::TypingEvent,
     CustomEvent, CustomRoomEvent, CustomStateEvent, EventType, InnerInvalidEvent, InvalidEvent,
 };
+use js_int::UInt;
+use ruma_identifiers::{EventId, RoomId, UserId};
 
 /// A basic event, room event, or state event.
 #[derive(Clone, Debug)]
@@ -1047,6 +1049,208 @@ impl FromStr for RoomEvent {
     }
 }
 
+impl crate::Event for RoomEvent {
+    type Content = (); // TODO
+
+    fn content(&self) -> &Self::Content {
+        unimplemented!() // TODO
+    }
+
+    fn event_type(&self) -> EventType {
+        match &self {
+            RoomEvent::CallAnswer(e) => e.event_type(),
+            RoomEvent::CallCandidates(e) => e.event_type(),
+            RoomEvent::CallHangup(e) => e.event_type(),
+            RoomEvent::CallInvite(e) => e.event_type(),
+            RoomEvent::RoomAliases(e) => e.event_type(),
+            RoomEvent::RoomAvatar(e) => e.event_type(),
+            RoomEvent::RoomCanonicalAlias(e) => e.event_type(),
+            RoomEvent::RoomCreate(e) => e.event_type(),
+            RoomEvent::RoomEncrypted(e) => e.event_type(),
+            RoomEvent::RoomEncryption(e) => e.event_type(),
+            RoomEvent::RoomGuestAccess(e) => e.event_type(),
+            RoomEvent::RoomHistoryVisibility(e) => e.event_type(),
+            RoomEvent::RoomJoinRules(e) => e.event_type(),
+            RoomEvent::RoomMember(e) => e.event_type(),
+            RoomEvent::RoomMessage(e) => e.event_type(),
+            RoomEvent::RoomMessageFeedback(e) => e.event_type(),
+            RoomEvent::RoomName(e) => e.event_type(),
+            RoomEvent::RoomPinnedEvents(e) => e.event_type(),
+            RoomEvent::RoomPowerLevels(e) => e.event_type(),
+            RoomEvent::RoomRedaction(e) => e.event_type(),
+            RoomEvent::RoomServerAcl(e) => e.event_type(),
+            RoomEvent::RoomThirdPartyInvite(e) => e.event_type(),
+            RoomEvent::RoomTombstone(e) => e.event_type(),
+            RoomEvent::RoomTopic(e) => e.event_type(),
+            RoomEvent::Sticker(e) => e.event_type(),
+            RoomEvent::CustomRoom(e) => e.event_type(),
+            RoomEvent::CustomState(e) => e.event_type(),
+        }
+    }
+}
+
+impl crate::RoomEvent for RoomEvent {
+    fn event_id(&self) -> &EventId {
+        match &self {
+            RoomEvent::CallAnswer(e) => e.event_id(),
+            RoomEvent::CallCandidates(e) => e.event_id(),
+            RoomEvent::CallHangup(e) => e.event_id(),
+            RoomEvent::CallInvite(e) => e.event_id(),
+            RoomEvent::RoomAliases(e) => e.event_id(),
+            RoomEvent::RoomAvatar(e) => e.event_id(),
+            RoomEvent::RoomCanonicalAlias(e) => e.event_id(),
+            RoomEvent::RoomCreate(e) => e.event_id(),
+            RoomEvent::RoomEncrypted(e) => e.event_id(),
+            RoomEvent::RoomEncryption(e) => e.event_id(),
+            RoomEvent::RoomGuestAccess(e) => e.event_id(),
+            RoomEvent::RoomHistoryVisibility(e) => e.event_id(),
+            RoomEvent::RoomJoinRules(e) => e.event_id(),
+            RoomEvent::RoomMember(e) => e.event_id(),
+            RoomEvent::RoomMessage(e) => e.event_id(),
+            RoomEvent::RoomMessageFeedback(e) => e.event_id(),
+            RoomEvent::RoomName(e) => e.event_id(),
+            RoomEvent::RoomPinnedEvents(e) => e.event_id(),
+            RoomEvent::RoomPowerLevels(e) => e.event_id(),
+            RoomEvent::RoomRedaction(e) => e.event_id(),
+            RoomEvent::RoomServerAcl(e) => e.event_id(),
+            RoomEvent::RoomThirdPartyInvite(e) => e.event_id(),
+            RoomEvent::RoomTombstone(e) => e.event_id(),
+            RoomEvent::RoomTopic(e) => e.event_id(),
+            RoomEvent::Sticker(e) => e.event_id(),
+            RoomEvent::CustomRoom(e) => e.event_id(),
+            RoomEvent::CustomState(e) => e.event_id(),
+        }
+    }
+
+    fn origin_server_ts(&self) -> UInt {
+        match &self {
+            RoomEvent::CallAnswer(e) => e.origin_server_ts(),
+            RoomEvent::CallCandidates(e) => e.origin_server_ts(),
+            RoomEvent::CallHangup(e) => e.origin_server_ts(),
+            RoomEvent::CallInvite(e) => e.origin_server_ts(),
+            RoomEvent::RoomAliases(e) => e.origin_server_ts(),
+            RoomEvent::RoomAvatar(e) => e.origin_server_ts(),
+            RoomEvent::RoomCanonicalAlias(e) => e.origin_server_ts(),
+            RoomEvent::RoomCreate(e) => e.origin_server_ts(),
+            RoomEvent::RoomEncrypted(e) => e.origin_server_ts(),
+            RoomEvent::RoomEncryption(e) => e.origin_server_ts(),
+            RoomEvent::RoomGuestAccess(e) => e.origin_server_ts(),
+            RoomEvent::RoomHistoryVisibility(e) => e.origin_server_ts(),
+            RoomEvent::RoomJoinRules(e) => e.origin_server_ts(),
+            RoomEvent::RoomMember(e) => e.origin_server_ts(),
+            RoomEvent::RoomMessage(e) => e.origin_server_ts(),
+            RoomEvent::RoomMessageFeedback(e) => e.origin_server_ts(),
+            RoomEvent::RoomName(e) => e.origin_server_ts(),
+            RoomEvent::RoomPinnedEvents(e) => e.origin_server_ts(),
+            RoomEvent::RoomPowerLevels(e) => e.origin_server_ts(),
+            RoomEvent::RoomRedaction(e) => e.origin_server_ts(),
+            RoomEvent::RoomServerAcl(e) => e.origin_server_ts(),
+            RoomEvent::RoomThirdPartyInvite(e) => e.origin_server_ts(),
+            RoomEvent::RoomTombstone(e) => e.origin_server_ts(),
+            RoomEvent::RoomTopic(e) => e.origin_server_ts(),
+            RoomEvent::Sticker(e) => e.origin_server_ts(),
+            RoomEvent::CustomRoom(e) => e.origin_server_ts(),
+            RoomEvent::CustomState(e) => e.origin_server_ts(),
+        }
+    }
+
+    fn room_id(&self) -> Option<&RoomId> {
+        match &self {
+            RoomEvent::CallAnswer(e) => e.room_id(),
+            RoomEvent::CallCandidates(e) => e.room_id(),
+            RoomEvent::CallHangup(e) => e.room_id(),
+            RoomEvent::CallInvite(e) => e.room_id(),
+            RoomEvent::RoomAliases(e) => e.room_id(),
+            RoomEvent::RoomAvatar(e) => e.room_id(),
+            RoomEvent::RoomCanonicalAlias(e) => e.room_id(),
+            RoomEvent::RoomCreate(e) => e.room_id(),
+            RoomEvent::RoomEncrypted(e) => e.room_id(),
+            RoomEvent::RoomEncryption(e) => e.room_id(),
+            RoomEvent::RoomGuestAccess(e) => e.room_id(),
+            RoomEvent::RoomHistoryVisibility(e) => e.room_id(),
+            RoomEvent::RoomJoinRules(e) => e.room_id(),
+            RoomEvent::RoomMember(e) => e.room_id(),
+            RoomEvent::RoomMessage(e) => e.room_id(),
+            RoomEvent::RoomMessageFeedback(e) => e.room_id(),
+            RoomEvent::RoomName(e) => e.room_id(),
+            RoomEvent::RoomPinnedEvents(e) => e.room_id(),
+            RoomEvent::RoomPowerLevels(e) => e.room_id(),
+            RoomEvent::RoomRedaction(e) => e.room_id(),
+            RoomEvent::RoomServerAcl(e) => e.room_id(),
+            RoomEvent::RoomThirdPartyInvite(e) => e.room_id(),
+            RoomEvent::RoomTombstone(e) => e.room_id(),
+            RoomEvent::RoomTopic(e) => e.room_id(),
+            RoomEvent::Sticker(e) => e.room_id(),
+            RoomEvent::CustomRoom(e) => e.room_id(),
+            RoomEvent::CustomState(e) => e.room_id(),
+        }
+    }
+
+    fn sender(&self) -> &UserId {
+        match &self {
+            RoomEvent::CallAnswer(e) => e.sender(),
+            RoomEvent::CallCandidates(e) => e.sender(),
+            RoomEvent::CallHangup(e) => e.sender(),
+            RoomEvent::CallInvite(e) => e.sender(),
+            RoomEvent::RoomAliases(e) => e.sender(),
+            RoomEvent::RoomAvatar(e) => e.sender(),
+            RoomEvent::RoomCanonicalAlias(e) => e.sender(),
+            RoomEvent::RoomCreate(e) => e.sender(),
+            RoomEvent::RoomEncrypted(e) => e.sender(),
+            RoomEvent::RoomEncryption(e) => e.sender(),
+            RoomEvent::RoomGuestAccess(e) => e.sender(),
+            RoomEvent::RoomHistoryVisibility(e) => e.sender(),
+            RoomEvent::RoomJoinRules(e) => e.sender(),
+            RoomEvent::RoomMember(e) => e.sender(),
+            RoomEvent::RoomMessage(e) => e.sender(),
+            RoomEvent::RoomMessageFeedback(e) => e.sender(),
+            RoomEvent::RoomName(e) => e.sender(),
+            RoomEvent::RoomPinnedEvents(e) => e.sender(),
+            RoomEvent::RoomPowerLevels(e) => e.sender(),
+            RoomEvent::RoomRedaction(e) => e.sender(),
+            RoomEvent::RoomServerAcl(e) => e.sender(),
+            RoomEvent::RoomThirdPartyInvite(e) => e.sender(),
+            RoomEvent::RoomTombstone(e) => e.sender(),
+            RoomEvent::RoomTopic(e) => e.sender(),
+            RoomEvent::Sticker(e) => e.sender(),
+            RoomEvent::CustomRoom(e) => e.sender(),
+            RoomEvent::CustomState(e) => e.sender(),
+        }
+    }
+
+    fn unsigned(&self) -> Option<&Value> {
+        match &self {
+            RoomEvent::CallAnswer(e) => e.unsigned(),
+            RoomEvent::CallCandidates(e) => e.unsigned(),
+            RoomEvent::CallHangup(e) => e.unsigned(),
+            RoomEvent::CallInvite(e) => e.unsigned(),
+            RoomEvent::RoomAliases(e) => e.unsigned(),
+            RoomEvent::RoomAvatar(e) => e.unsigned(),
+            RoomEvent::RoomCanonicalAlias(e) => e.unsigned(),
+            RoomEvent::RoomCreate(e) => e.unsigned(),
+            RoomEvent::RoomEncrypted(e) => e.unsigned(),
+            RoomEvent::RoomEncryption(e) => e.unsigned(),
+            RoomEvent::RoomGuestAccess(e) => e.unsigned(),
+            RoomEvent::RoomHistoryVisibility(e) => e.unsigned(),
+            RoomEvent::RoomJoinRules(e) => e.unsigned(),
+            RoomEvent::RoomMember(e) => e.unsigned(),
+            RoomEvent::RoomMessage(e) => e.unsigned(),
+            RoomEvent::RoomMessageFeedback(e) => e.unsigned(),
+            RoomEvent::RoomName(e) => e.unsigned(),
+            RoomEvent::RoomPinnedEvents(e) => e.unsigned(),
+            RoomEvent::RoomPowerLevels(e) => e.unsigned(),
+            RoomEvent::RoomRedaction(e) => e.unsigned(),
+            RoomEvent::RoomServerAcl(e) => e.unsigned(),
+            RoomEvent::RoomThirdPartyInvite(e) => e.unsigned(),
+            RoomEvent::RoomTombstone(e) => e.unsigned(),
+            RoomEvent::RoomTopic(e) => e.unsigned(),
+            RoomEvent::Sticker(e) => e.unsigned(),
+            RoomEvent::CustomRoom(e) => e.unsigned(),
+            RoomEvent::CustomState(e) => e.unsigned(),
+        }
+    }
+}
+
 impl Serialize for StateEvent {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1254,6 +1458,176 @@ impl FromStr for StateEvent {
             EventType::__Nonexhaustive => {
                 panic!("__Nonexhaustive enum variant is not intended for use.")
             }
+        }
+    }
+}
+
+impl crate::Event for StateEvent {
+    type Content = (); // TODO
+
+    fn content(&self) -> &Self::Content {
+        unimplemented!() // TODO
+    }
+
+    fn event_type(&self) -> EventType {
+        match &self {
+            StateEvent::RoomAliases(e) => e.event_type(),
+            StateEvent::RoomAvatar(e) => e.event_type(),
+            StateEvent::RoomCanonicalAlias(e) => e.event_type(),
+            StateEvent::RoomCreate(e) => e.event_type(),
+            StateEvent::RoomEncryption(e) => e.event_type(),
+            StateEvent::RoomGuestAccess(e) => e.event_type(),
+            StateEvent::RoomHistoryVisibility(e) => e.event_type(),
+            StateEvent::RoomJoinRules(e) => e.event_type(),
+            StateEvent::RoomMember(e) => e.event_type(),
+            StateEvent::RoomName(e) => e.event_type(),
+            StateEvent::RoomPinnedEvents(e) => e.event_type(),
+            StateEvent::RoomPowerLevels(e) => e.event_type(),
+            StateEvent::RoomServerAcl(e) => e.event_type(),
+            StateEvent::RoomThirdPartyInvite(e) => e.event_type(),
+            StateEvent::RoomTombstone(e) => e.event_type(),
+            StateEvent::RoomTopic(e) => e.event_type(),
+            StateEvent::CustomState(e) => e.event_type(),
+        }
+    }
+}
+
+impl crate::RoomEvent for StateEvent {
+    fn event_id(&self) -> &EventId {
+        match &self {
+            StateEvent::RoomAliases(e) => e.event_id(),
+            StateEvent::RoomAvatar(e) => e.event_id(),
+            StateEvent::RoomCanonicalAlias(e) => e.event_id(),
+            StateEvent::RoomCreate(e) => e.event_id(),
+            StateEvent::RoomEncryption(e) => e.event_id(),
+            StateEvent::RoomGuestAccess(e) => e.event_id(),
+            StateEvent::RoomHistoryVisibility(e) => e.event_id(),
+            StateEvent::RoomJoinRules(e) => e.event_id(),
+            StateEvent::RoomMember(e) => e.event_id(),
+            StateEvent::RoomName(e) => e.event_id(),
+            StateEvent::RoomPinnedEvents(e) => e.event_id(),
+            StateEvent::RoomPowerLevels(e) => e.event_id(),
+            StateEvent::RoomServerAcl(e) => e.event_id(),
+            StateEvent::RoomThirdPartyInvite(e) => e.event_id(),
+            StateEvent::RoomTombstone(e) => e.event_id(),
+            StateEvent::RoomTopic(e) => e.event_id(),
+            StateEvent::CustomState(e) => e.event_id(),
+        }
+    }
+
+    fn origin_server_ts(&self) -> UInt {
+        match &self {
+            StateEvent::RoomAliases(e) => e.origin_server_ts(),
+            StateEvent::RoomAvatar(e) => e.origin_server_ts(),
+            StateEvent::RoomCanonicalAlias(e) => e.origin_server_ts(),
+            StateEvent::RoomCreate(e) => e.origin_server_ts(),
+            StateEvent::RoomEncryption(e) => e.origin_server_ts(),
+            StateEvent::RoomGuestAccess(e) => e.origin_server_ts(),
+            StateEvent::RoomHistoryVisibility(e) => e.origin_server_ts(),
+            StateEvent::RoomJoinRules(e) => e.origin_server_ts(),
+            StateEvent::RoomMember(e) => e.origin_server_ts(),
+            StateEvent::RoomName(e) => e.origin_server_ts(),
+            StateEvent::RoomPinnedEvents(e) => e.origin_server_ts(),
+            StateEvent::RoomPowerLevels(e) => e.origin_server_ts(),
+            StateEvent::RoomServerAcl(e) => e.origin_server_ts(),
+            StateEvent::RoomThirdPartyInvite(e) => e.origin_server_ts(),
+            StateEvent::RoomTombstone(e) => e.origin_server_ts(),
+            StateEvent::RoomTopic(e) => e.origin_server_ts(),
+            StateEvent::CustomState(e) => e.origin_server_ts(),
+        }
+    }
+
+    fn room_id(&self) -> Option<&RoomId> {
+        match &self {
+            StateEvent::RoomAliases(e) => e.room_id(),
+            StateEvent::RoomAvatar(e) => e.room_id(),
+            StateEvent::RoomCanonicalAlias(e) => e.room_id(),
+            StateEvent::RoomCreate(e) => e.room_id(),
+            StateEvent::RoomEncryption(e) => e.room_id(),
+            StateEvent::RoomGuestAccess(e) => e.room_id(),
+            StateEvent::RoomHistoryVisibility(e) => e.room_id(),
+            StateEvent::RoomJoinRules(e) => e.room_id(),
+            StateEvent::RoomMember(e) => e.room_id(),
+            StateEvent::RoomName(e) => e.room_id(),
+            StateEvent::RoomPinnedEvents(e) => e.room_id(),
+            StateEvent::RoomPowerLevels(e) => e.room_id(),
+            StateEvent::RoomServerAcl(e) => e.room_id(),
+            StateEvent::RoomThirdPartyInvite(e) => e.room_id(),
+            StateEvent::RoomTombstone(e) => e.room_id(),
+            StateEvent::RoomTopic(e) => e.room_id(),
+            StateEvent::CustomState(e) => e.room_id(),
+        }
+    }
+
+    fn sender(&self) -> &UserId {
+        match &self {
+            StateEvent::RoomAliases(e) => e.sender(),
+            StateEvent::RoomAvatar(e) => e.sender(),
+            StateEvent::RoomCanonicalAlias(e) => e.sender(),
+            StateEvent::RoomCreate(e) => e.sender(),
+            StateEvent::RoomEncryption(e) => e.sender(),
+            StateEvent::RoomGuestAccess(e) => e.sender(),
+            StateEvent::RoomHistoryVisibility(e) => e.sender(),
+            StateEvent::RoomJoinRules(e) => e.sender(),
+            StateEvent::RoomMember(e) => e.sender(),
+            StateEvent::RoomName(e) => e.sender(),
+            StateEvent::RoomPinnedEvents(e) => e.sender(),
+            StateEvent::RoomPowerLevels(e) => e.sender(),
+            StateEvent::RoomServerAcl(e) => e.sender(),
+            StateEvent::RoomThirdPartyInvite(e) => e.sender(),
+            StateEvent::RoomTombstone(e) => e.sender(),
+            StateEvent::RoomTopic(e) => e.sender(),
+            StateEvent::CustomState(e) => e.sender(),
+        }
+    }
+
+    fn unsigned(&self) -> Option<&Value> {
+        match &self {
+            StateEvent::RoomAliases(e) => e.unsigned(),
+            StateEvent::RoomAvatar(e) => e.unsigned(),
+            StateEvent::RoomCanonicalAlias(e) => e.unsigned(),
+            StateEvent::RoomCreate(e) => e.unsigned(),
+            StateEvent::RoomEncryption(e) => e.unsigned(),
+            StateEvent::RoomGuestAccess(e) => e.unsigned(),
+            StateEvent::RoomHistoryVisibility(e) => e.unsigned(),
+            StateEvent::RoomJoinRules(e) => e.unsigned(),
+            StateEvent::RoomMember(e) => e.unsigned(),
+            StateEvent::RoomName(e) => e.unsigned(),
+            StateEvent::RoomPinnedEvents(e) => e.unsigned(),
+            StateEvent::RoomPowerLevels(e) => e.unsigned(),
+            StateEvent::RoomServerAcl(e) => e.unsigned(),
+            StateEvent::RoomThirdPartyInvite(e) => e.unsigned(),
+            StateEvent::RoomTombstone(e) => e.unsigned(),
+            StateEvent::RoomTopic(e) => e.unsigned(),
+            StateEvent::CustomState(e) => e.unsigned(),
+        }
+    }
+}
+
+impl crate::StateEvent for StateEvent {
+    fn prev_content(&self) -> Option<&Self::Content> {
+        unimplemented!() // TODO
+    }
+
+    fn state_key(&self) -> &str {
+        match &self {
+            StateEvent::RoomAliases(e) => e.state_key(),
+            StateEvent::RoomAvatar(e) => e.state_key(),
+            StateEvent::RoomCanonicalAlias(e) => e.state_key(),
+            StateEvent::RoomCreate(e) => e.state_key(),
+            StateEvent::RoomEncryption(e) => e.state_key(),
+            StateEvent::RoomGuestAccess(e) => e.state_key(),
+            StateEvent::RoomHistoryVisibility(e) => e.state_key(),
+            StateEvent::RoomJoinRules(e) => e.state_key(),
+            StateEvent::RoomMember(e) => e.state_key(),
+            StateEvent::RoomName(e) => e.state_key(),
+            StateEvent::RoomPinnedEvents(e) => e.state_key(),
+            StateEvent::RoomPowerLevels(e) => e.state_key(),
+            StateEvent::RoomServerAcl(e) => e.state_key(),
+            StateEvent::RoomThirdPartyInvite(e) => e.state_key(),
+            StateEvent::RoomTombstone(e) => e.state_key(),
+            StateEvent::RoomTopic(e) => e.state_key(),
+            StateEvent::CustomState(e) => e.state_key(),
         }
     }
 }
